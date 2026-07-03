@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Rental Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">RentalSys</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    
+                    <li class="nav-item" sec:authorize="hasAuthority('OWNER')"><a class="nav-link" href="/property/new">Add Property</a></li>
+                    <li class="nav-item" sec:authorize="hasAuthority('OWNER')"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    
+                    <li class="nav-item" sec:authorize="hasAuthority('TENANT')"><a class="nav-link text-warning" href="/my-bookings">My Bookings</a></li>
+                    
+                    <li class="nav-item" sec:authorize="isAnonymous()"><a class="nav-link" href="/login">Login / Register</a></li>
+                    
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" class="d-inline m-0 p-0">
+                            <button type="submit" class="btn btn-link nav-link border-0 text-decoration-none">Logout</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold">Available Properties</h1>
+            <p class="lead text-muted">Find your perfect home today.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4" th:each="property : ${properties}">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${property.title}">Property Title</h5>
+                        <p class="text-muted mb-2" th:text="${property.location}">Location</p>
+                        <h6 class="text-primary mb-3">
+                            ₹<span th:text="${property.rentPrice}">0.00</span> / month
+                        </h6>
+                        <span class="badge bg-success mb-3" th:text="${property.status}">STATUS</span>
+                        <br>
+                        <a th:href="@{/property/{id}(id=${property.id})}" class="btn btn-outline-dark w-100">View Details</a>
+                        <form sec:authorize="hasAuthority('OWNER')" th:action="@{/property/{id}/delete(id=${property.id})}" method="post" class="mt-2">
+                            <button type="submit" class="btn btn-danger w-100 fw-bold" onclick="return confirm('Are you sure you want to remove this listing?');">
+                                Delete Listing
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 text-center" th:if="${#lists.isEmpty(properties)}">
+                <p class="text-muted">No properties are currently listed in the system.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

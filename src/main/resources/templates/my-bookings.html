@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title>My Bookings</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">RentalSys</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item" sec:authorize="hasAuthority('TENANT')"><a class="nav-link active"
+                            href="/my-bookings">My Bookings</a></li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" class="d-inline m-0 p-0">
+                            <button type="submit"
+                                class="btn btn-link nav-link border-0 text-decoration-none">Logout</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2 class="fw-bold mb-4">My Rental Requests</h2>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Property</th>
+                            <th>Dates</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="booking : ${bookings}">
+                            <td th:text="${booking.property.title}">Property</td>
+                            <td th:text="${booking.startDate} + ' to ' + ${booking.endDate}">Dates</td>
+                            <td>
+                                <span class="badge"
+                                    th:classappend="${booking.bookingStatus == 'PENDING'} ? 'bg-warning text-dark' : (${booking.bookingStatus == 'APPROVED'} ? 'bg-success' : 'bg-primary')"
+                                    th:text="${booking.bookingStatus}">STATUS</span>
+                            </td>
+                            <td>
+                                <span th:if="${booking.bookingStatus == 'PENDING'}" class="text-muted small">Awaiting
+                                    Owner Approval</span>
+
+                                <a th:if="${booking.bookingStatus == 'APPROVED'}"
+                                    th:href="@{/checkout/{id}(id=${booking.id})}"
+                                    class="btn btn-sm btn-primary fw-bold">Pay Now</a>
+
+                                <form
+                                    th:if="${booking.bookingStatus == 'PENDING' or booking.bookingStatus == 'APPROVED'}"
+                                    th:action="@{/booking/{id}/cancel(id=${booking.id})}" method="post" class="mt-2">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100 fw-bold">Cancel
+                                        Request</button>
+                                </form>
+
+                                <span th:if="${booking.bookingStatus == 'CANCELLED'}"
+                                    class="badge bg-danger">Cancelled</span>
+
+                                <div th:if="${booking.bookingStatus == 'PAID'}">
+                                    <span class="badge bg-secondary mb-2 d-block">Transaction Complete</span>
+                                    <a th:href="@{/booking/{id}/review(id=${booking.id})}"
+                                        class="btn btn-sm btn-outline-primary fw-bold w-100">Leave Review</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
