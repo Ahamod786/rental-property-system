@@ -18,7 +18,6 @@ public class Property {
     @Column(name = "property_id")
     private Long id;
 
-    // Foreign Key linking to the User table
     @ManyToOne
     @JoinColumn(name = "owner_id", referencedColumnName = "user_id")
     private User owner;
@@ -35,5 +34,30 @@ public class Property {
     @Column(name = "status", nullable = false, length = 20)
     private String status; // AVAILABLE, RENTED
 
-    private boolean isActive = true;
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    @Column(name = "area_sqft")
+    private Double areaSqft;
+
+    @Column(name = "bedrooms")
+    private Integer bedrooms;
+
+    @Column(name = "bathrooms")
+    private Double bathrooms;
+
+    @Column(name = "property_age")
+    private Integer propertyAge;
+
+    @Column(name = "is_furnished")
+    private Boolean isFurnished = false;
+
+    @Column(name = "has_ac")
+    private Boolean hasAc = false;
+
+    @Column(name = "parking_spots")
+    private Integer parkingSpots = 0;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 }

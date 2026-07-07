@@ -15,13 +15,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentTransaction {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id")
     private Long id;
 
-    // ManyToOne: A tenant might pay the deposit first, and the rent later, meaning Many payments link to One booking
     @ManyToOne
     @JoinColumn(name = "booking_id", referencedColumnName = "booking_id")
     private Booking booking;
@@ -38,10 +37,10 @@ public class PaymentTransaction {
     private LocalDateTime paymentDate;
 
     @Column(name = "payment_method", nullable = false, length = 30)
-    private String paymentMethod;
+    private String paymentMethod; // CARD, BANK, MOBILE, CASH
 
     @Column(name = "payment_status", nullable = false, length = 20)
-    private String paymentStatus;
+    private String paymentStatus; // PENDING, PAID, FAILED
 
     @Column(name = "transaction_ref", nullable = false, unique = true, length = 100)
     private String transactionRef;

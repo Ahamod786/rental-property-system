@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "Booking")
@@ -12,18 +13,16 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Booking {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_id")
     private Long id;
 
-    // Fixed: Many bookings can happen for One property over time
     @ManyToOne
     @JoinColumn(name = "property_id", referencedColumnName = "property_id")
     private Property property;
 
-    // Correct: Many bookings can be made by One tenant
     @ManyToOne
     @JoinColumn(name = "tenant_id", referencedColumnName = "user_id")
     private User tenant;
@@ -35,5 +34,11 @@ public class Booking {
     private LocalDate endDate;
 
     @Column(name = "booking_status", nullable = false, length = 20)
-    private String bookingStatus;
+    private String bookingStatus; // PENDING, APPROVED, REJECTED, COMPLETED
+
+    @Column(name = "total_price", precision = 10, scale = 2)
+    private BigDecimal totalPrice;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
 }

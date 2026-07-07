@@ -13,13 +13,12 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Review {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
     private Long id;
 
-    // ManyToOne: Many reviews can be written for One property
     @ManyToOne
     @JoinColumn(name = "property_id", referencedColumnName = "property_id")
     private Property property;
@@ -33,7 +32,10 @@ public class Review {
     @Column(name = "rating", nullable = false)
     private int rating;
 
-    // Java uses String. We tell the database "Ayo make it TEXT format".
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
+
+    @ManyToOne
+    @JoinColumn(name = "booking_id", referencedColumnName = "booking_id")
+    private Booking booking;
 }

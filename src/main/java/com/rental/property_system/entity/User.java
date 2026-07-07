@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "User")
-@Data // Lombok annotation to auto-generate Getters, Setters, and toString()
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -27,5 +27,11 @@ public class User {
     private String password;
 
     @Column(name = "role", nullable = false, length = 20)
-    private String role; // OWNER, TENANT, ADMIN
+    private String role;
+
+    @Column(name = "phone", length = 20)
+    private String phone;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
 }

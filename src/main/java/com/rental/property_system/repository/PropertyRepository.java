@@ -11,7 +11,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     
     // Fetches all active properties (used for the owner's dashboard/general lists)
     List<Property> findByIsActiveTrue();
-    
-    // NEW: Fetches properties that are BOTH a specific status AND haven't been deleted
+
     List<Property> findByStatusAndIsActiveTrue(String status);
+    List<Property> findByOwnerIdAndIsActiveTrue(Long ownerId);
+    List<Property> findByLocationContainingAndIsActiveTrue(String location);
 }

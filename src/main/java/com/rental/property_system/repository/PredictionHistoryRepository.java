@@ -1,0 +1,13 @@
+package com.rental.property_system.repository;
+
+import com.rental.property_system.entity.PredictionHistory;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface PredictionHistoryRepository extends JpaRepository<PredictionHistory, Long> {
+    List<PredictionHistory> findByPropertyId(Long propertyId);
+
+    PredictionHistory findFirstByPropertyIdOrderByCreatedAtDesc(Long propertyId);
+}

@@ -21,4 +21,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     );
     // Spring automatically writes the SQL to find bookings by a specific tenant
     List<Booking> findByTenant(com.rental.property_system.entity.User tenant);
+    List<Booking> findByPropertyId(Long propertyId);
+    List<Booking> findByPropertyIdAndBookingStatus(Long propertyId, String status);
 }
