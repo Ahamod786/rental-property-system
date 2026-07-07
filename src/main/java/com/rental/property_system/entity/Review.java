@@ -1,14 +1,22 @@
 package com.rental.property_system.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
-@Table(name = "Review")
+@Table(name = "reviews")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,23 +27,27 @@ public class Review {
     @Column(name = "review_id")
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "property_id", referencedColumnName = "property_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "property_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Property property;
 
-    @ManyToOne
-    @JoinColumn(name = "tenant_id", referencedColumnName = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private User tenant;
 
-    @Min(1)
-    @Max(5)
-    @Column(name = "rating", nullable = false)
-    private int rating;
-
-    @Column(name = "comment", columnDefinition = "TEXT")
-    private String comment;
-
-    @ManyToOne
-    @JoinColumn(name = "booking_id", referencedColumnName = "booking_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Booking booking;
+
+    @Column(nullable = false)
+    private Integer rating;
+
+    @Column(columnDefinition = "TEXT")
+    private String comment;
 }

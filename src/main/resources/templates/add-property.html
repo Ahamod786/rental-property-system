@@ -1,70 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Property</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${isEdit} ? 'Edit Property' : 'Add Property'">Add Property</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
-<body class="bg-light">
-
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">RentalSys</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                    
-                    <li class="nav-item" sec:authorize="hasAuthority('OWNER')"><a class="nav-link" href="/property/new">Add Property</a></li>
-                    <li class="nav-item" sec:authorize="hasAuthority('OWNER')"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-                    
-                    <li class="nav-item" sec:authorize="isAnonymous()"><a class="nav-link" href="/login">Login / Register</a></li>
-                    
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" class="d-inline m-0 p-0">
-                            <button type="submit" class="btn btn-link nav-link border-0 text-decoration-none">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white text-center py-3">
-                        <h4 class="mb-0">List a New Property</h4>
-                    </div>
-                    <div class="card-body p-4">
-                        
-                        <form th:action="@{/property/new}" th:object="${property}" method="post">
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Property Title</label>
-                                <input type="text" class="form-control" th:field="*{title}" placeholder="e.g., Luxury 2BHK Apartment" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Location</label>
-                                <input type="text" class="form-control" th:field="*{location}" placeholder="e.g., Downtown, Sector 4" required>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">Monthly Rent Price (₹)</label>
-                                <input type="number" step="0.01" class="form-control" th:field="*{rentPrice}" placeholder="1500.00" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 fw-bold">Save Property</button>
-                            
-                        </form>
-
-                    </div>
-                </div>
-            </div>
-        </div>
+<body class="add-property-page">
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">RentalAI</a>
+        <a class="btn btn-outline-light btn-sm" th:href="@{/dashboard}">Dashboard</a>
     </div>
-
+</nav>
+<main class="container py-4">
+    <div th:replace="~{fragments/messages :: flash}"></div>
+    <h1 class="h3 mb-4" th:text="${isEdit} ? 'Edit Property' : 'Add Property'">Add Property</h1>
+    <form th:action="${isEdit} ? @{/property/{id}/edit(id=${property.id})} : @{/property/new}" th:object="${property}" method="post" class="row g-3">
+        <div class="col-md-8">
+            <label class="form-label" for="title">Title</label>
+            <input class="form-control" id="title" th:field="*{title}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-select" id="status" th:field="*{status}">
+                <option value="AVAILABLE">Available</option>
+                <option value="UNAVAILABLE">Unavailable</option>
+            </select>
+        </div>
+        <div class="col-md-8">
+            <label class="form-label" for="location">Location</label>
+            <input class="form-control" id="location" th:field="*{location}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="rentPrice">Monthly Rent</label>
+            <input class="form-control" id="rentPrice" th:field="*{rentPrice}" type="number" step="0.01" min="1" required>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="description">Description</label>
+            <textarea class="form-control" id="description" th:field="*{description}" rows="4"></textarea>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="areaSqft">Area Sqft</label>
+            <input class="form-control" id="areaSqft" th:field="*{areaSqft}" type="number" step="0.1">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="bedrooms">Bedrooms</label>
+            <input class="form-control" id="bedrooms" th:field="*{bedrooms}" type="number" min="0">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="bathrooms">Bathrooms</label>
+            <input class="form-control" id="bathrooms" th:field="*{bathrooms}" type="number" step="0.5" min="0">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="propertyAge">Property Age</label>
+            <input class="form-control" id="propertyAge" th:field="*{propertyAge}" type="number" min="0">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="parkingSpots">Parking Spots</label>
+            <input class="form-control" id="parkingSpots" th:field="*{parkingSpots}" type="number" min="0">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check">
+                <input class="form-check-input" id="isFurnished" th:field="*{isFurnished}" type="checkbox">
+                <label class="form-check-label" for="isFurnished">Furnished</label>
+            </div>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check">
+                <input class="form-check-input" id="hasAc" th:field="*{hasAc}" type="checkbox">
+                <label class="form-check-label" for="hasAc">AC Available</label>
+            </div>
+        </div>
+        <div class="col-12 d-flex gap-2">
+            <button class="btn btn-primary" type="submit" th:text="${isEdit} ? 'Save Changes' : 'Add Property'">Save</button>
+            <a class="btn btn-outline-secondary" th:href="@{/dashboard}">Cancel</a>
+        </div>
+    </form>
+</main>
 </body>
 </html>

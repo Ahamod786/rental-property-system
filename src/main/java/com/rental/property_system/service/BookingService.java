@@ -7,111 +7,83 @@ import com.rental.property_system.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class BookingService {
 
+    private static final List<String> BLOCKING_STATUSES = List.of("APPROVED");
+
     private final BookingRepository bookingRepository;
     private final PropertyService propertyService;
     private final UserService userService;
 
     @Transactional
-    public Booking requestBooking(Long propertyId, Long tenantId,
-                                  LocalDate startDate, LocalDate endDate) {
+    public Booking requestBooking(Long propertyId, Long tenantId, LocalDate startDate, LocalDate endDate) {
+        validateDates(startDate, endDate);
         Property property = propertyService.getPropertyById(propertyId);
+        if (!"AVAILABLE".equals(property.getStatus()) || !Boolean.TRUE.equals(property.getIsActive())) {
+            throw new RuntimeException("Property is not available for booking");
+        }
+        if (bookingRepository.existsApprovedOverlap(propertyId, startDate, endDate)) {
+            throw new RuntimeException("Property is already booked for these dates");
+        }
+
         User tenant = userService.getUserById(tenantId);
-
-        if (!property.getStatus().equals("AVAILABLE")) {
-            throw new RuntimeException("Property is not available!");
-        }
-
-        List<Booking> overlaps = bookingRepository.findApprovedOverlappingBookings(
-                propertyId, startDate, endDate
-        );
-
-        if (!overlaps.isEmpty()) {
-            throw new RuntimeException("Property already booked for these dates!");
-        }
-
         Booking booking = new Booking();
         booking.setProperty(property);
         booking.setTenant(tenant);
         booking.setStartDate(startDate);
         booking.setEndDate(endDate);
         booking.setBookingStatus("PENDING");
-
-        long days = ChronoUnit.DAYS.between(startDate, endDate);
-        BigDecimal dailyRate = property.getRentPrice().divide(new BigDecimal(30), 2,
-                java.math.RoundingMode.HALF_UP);
-        BigDecimal totalPrice = dailyRate.multiply(new BigDecimal(days));
-        booking.setTotalPrice(totalPrice);
-
+        booking.setTotalPrice(calculateTotalPrice(property.getRentPrice(), startDate, endDate));
         return bookingRepository.save(booking);
-    }
-
-    public List<Booking> getAllBookings() {
-        return bookingRepository.findAll();
     }
 
     @Transactional
     public Booking approveBooking(Long bookingId) {
         Booking booking = getBookingById(bookingId);
-        if (!booking.getBookingStatus().equals("PENDING")) {
-            throw new RuntimeException("Only pending bookings can be approved!");
+        requireStatus(booking, "PENDING");
+        if (!bookingRepository.findOverlappingBookings(
+                booking.getProperty().getId(),
+                booking.getStartDate(),
+                booking.getEndDate(),
+                BLOCKING_STATUSES).isEmpty()) {
+            throw new RuntimeException("Another approved booking overlaps these dates");
         }
         booking.setBookingStatus("APPROVED");
-        Property property = booking.getProperty();
-        property.setStatus("RENTED");
-        propertyService.updateProperty(property.getId(), property);
         return bookingRepository.save(booking);
     }
 
     @Transactional
     public Booking rejectBooking(Long bookingId) {
         Booking booking = getBookingById(bookingId);
-        if (!booking.getBookingStatus().equals("PENDING")) {
-            throw new RuntimeException("Only pending bookings can be rejected!");
-        }
+        requireStatus(booking, "PENDING");
         booking.setBookingStatus("REJECTED");
         return bookingRepository.save(booking);
     }
 
     @Transactional
-    public void cancelBooking(Long bookingId) {
+    public Booking cancelBooking(Long bookingId) {
         Booking booking = getBookingById(bookingId);
-        if (booking.getBookingStatus().equals("PAID")) {
-            throw new RuntimeException("Cannot cancel paid booking!");
+        if (!List.of("PENDING", "APPROVED").contains(booking.getBookingStatus())) {
+            throw new RuntimeException("Only pending or approved bookings can be cancelled");
         }
-        if (booking.getBookingStatus().equals("PENDING") ||
-                booking.getBookingStatus().equals("APPROVED")) {
-            booking.setBookingStatus("CANCELLED");
-            if (booking.getBookingStatus().equals("APPROVED")) {
-                Property property = booking.getProperty();
-                property.setStatus("AVAILABLE");
-                propertyService.updateProperty(property.getId(), property);
-            }
-            bookingRepository.save(booking);
-        } else {
-            throw new RuntimeException("Cannot cancel booking with status: " +
-                    booking.getBookingStatus());
-        }
+        booking.setBookingStatus("CANCELLED");
+        return bookingRepository.save(booking);
     }
 
     @Transactional
     public Booking completeBooking(Long bookingId) {
         Booking booking = getBookingById(bookingId);
-        if (!booking.getBookingStatus().equals("APPROVED")) {
-            throw new RuntimeException("Only approved bookings can be completed!");
-        }
+        requireStatus(booking, "APPROVED");
         booking.setBookingStatus("COMPLETED");
-        Property property = booking.getProperty();
-        property.setStatus("AVAILABLE");
-        propertyService.updateProperty(property.getId(), property);
         return bookingRepository.save(booking);
     }
 
@@ -121,15 +93,46 @@ public class BookingService {
     }
 
     public List<Booking> getBookingsByTenant(Long tenantId) {
-        User tenant = userService.getUserById(tenantId);
-        return bookingRepository.findByTenant(tenant);
+        return bookingRepository.findByTenantOrderByIdDesc(userService.getUserById(tenantId));
     }
 
     public List<Booking> getBookingsByProperty(Long propertyId) {
-        return bookingRepository.findByPropertyId(propertyId);
+        return bookingRepository.findByPropertyIdOrderByIdDesc(propertyId);
     }
 
-    public Booking requestBooking(Booking booking) {
-        return booking;
+    public List<Booking> getBookingsForOwner(Long ownerId) {
+        List<Property> properties = propertyService.getPropertiesByOwner(ownerId);
+        if (properties.isEmpty()) {
+            return List.of();
+        }
+        return bookingRepository.findByPropertyInOrderByIdDesc(properties);
+    }
+
+    public List<Booking> getAllBookings() {
+        return bookingRepository.findAll();
+    }
+
+    private void validateDates(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new RuntimeException("Start date and end date are required");
+        }
+        if (!endDate.isAfter(startDate)) {
+            throw new RuntimeException("End date must be after start date");
+        }
+        if (startDate.isBefore(LocalDate.now())) {
+            throw new RuntimeException("Start date cannot be in the past");
+        }
+    }
+
+    private BigDecimal calculateTotalPrice(BigDecimal monthlyRent, LocalDate startDate, LocalDate endDate) {
+        long days = ChronoUnit.DAYS.between(startDate, endDate);
+        BigDecimal dailyRate = monthlyRent.divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP);
+        return dailyRate.multiply(BigDecimal.valueOf(days)).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private void requireStatus(Booking booking, String status) {
+        if (!status.equals(booking.getBookingStatus())) {
+            throw new RuntimeException("Booking must be " + status + " for this action");
+        }
     }
 }

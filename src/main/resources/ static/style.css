@@ -1,0 +1,171 @@
+/* src/main/resources/static/css/style.css */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.card {
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.table {
+    vertical-align: middle;
+}
+
+.table th {
+    background-color: #212529;
+    color: white;
+}
+
+.alert {
+    border-radius: 10px;
+}
+
+.footer {
+    margin-top: 50px;
+    padding: 20px 0;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+.property-card {
+    height: 100%;
+}
+
+.property-card .card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.property-card .btn {
+    margin-top: auto;
+}
+.property-card {
+    overflow: hidden;
+    border-radius: 10px;
+    transition: transform 0.3s;
+}
+
+.property-card:hover {
+    transform: translateY(-5px);
+}
+
+.property-card .card-img-top {
+    height: 220px;
+    object-fit: cover;
+}
+
+.status-badge {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.8rem;
+}
+
+
+.card-img-top {
+    height: 220px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.card {
+    transition: transform 0.3s;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+}
+
+/* src/main/resources/static/css/style.css */
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.property-image {
+    height: 350px;
+    object-fit: cover;
+    width: 100%;
+    border-radius: 10px 10px 0 0;
+}
+
+.price-tag {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0d6efd;
+}
+
+.badge-status {
+    font-size: 1rem;
+    padding: 0.5rem 1.5rem;
+}
+
+.review-card {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid #0d6efd;
+}
+
+.upload-section {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 2px dashed #dee2e6;
+}
+
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sticky-top {
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+}

@@ -5,51 +5,51 @@ import com.rental.property_system.entity.Property;
 import com.rental.property_system.repository.PredictionHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
-import java.util.List;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
 public class PredictionService {
 
-    private final PredictionHistoryRepository predictionRepository;
-    private final PropertyService propertyService;
+    private final PredictionHistoryRepository predictionHistoryRepository;
 
-    public BigDecimal predictRent(Property property) {
-        double basePrice = 10000;
-        double areaPrice = property.getAreaSqft() != null ? property.getAreaSqft() * 10 : 0;
-        double bedroomPrice = property.getBedrooms() != null ? property.getBedrooms() * 2000 : 0;
-        double bathroomPrice = property.getBathrooms() != null ? property.getBathrooms() * 1500 : 0;
-        double furnishedPrice = property.getIsFurnished() != null && property.getIsFurnished() ? 2000 : 0;
-        double acPrice = property.getHasAc() != null && property.getHasAc() ? 1500 : 0;
-        double ageDiscount = property.getPropertyAge() != null ? property.getPropertyAge() * (-100) : 0;
+    @Transactional
+    public BigDecimal predictPrice(Property property) {
+        double area = value(property.getAreaSqft(), 700);
+        int bedrooms = property.getBedrooms() == null ? 1 : property.getBedrooms();
+        double bathrooms = value(property.getBathrooms(), 1);
+        int age = property.getPropertyAge() == null ? 5 : property.getPropertyAge();
 
-        double predicted = basePrice + areaPrice + bedroomPrice + bathroomPrice
-                + furnishedPrice + acPrice + ageDiscount;
-        return BigDecimal.valueOf(Math.max(predicted, 5000));
-    }
+        double locationFactor = property.getLocation() != null && property.getLocation().toLowerCase().matches(".*(central|city|metro|downtown).*")
+                ? 1.35
+                : 1.0;
+        double estimate = ((area * 18) + (bedrooms * 3500) + (bathrooms * 2200)
+                + (Boolean.TRUE.equals(property.getIsFurnished()) ? 4500 : 0)
+                + (Boolean.TRUE.equals(property.getHasAc()) ? 1800 : 0)
+                + (value(property.getParkingSpots(), 0) * 1200))
+                * locationFactor
+                - (Math.min(age, 30) * 150);
 
-    public PredictionHistory savePrediction(Long propertyId, BigDecimal predictedPrice) {
-        Property property = propertyService.getPropertyById(propertyId);
-
+        BigDecimal predicted = BigDecimal.valueOf(Math.max(estimate, 3000)).setScale(2, RoundingMode.HALF_UP);
         PredictionHistory history = new PredictionHistory();
-        history.setProperty(property);
+        history.setProperty(property.getId() == null ? null : property);
         history.setAreaSqft(property.getAreaSqft());
         history.setBedrooms(property.getBedrooms());
         history.setBathrooms(property.getBathrooms());
         history.setPropertyAge(property.getPropertyAge());
         history.setLocation(property.getLocation());
-        history.setPredictedPrice(predictedPrice);
+        history.setPredictedPrice(predicted);
         history.setActualPrice(property.getRentPrice());
-
-        return predictionRepository.save(history);
+        history.setCreatedAt(LocalDateTime.now());
+        predictionHistoryRepository.save(history);
+        return predicted;
     }
 
-    public List<PredictionHistory> getPredictionsByProperty(Long propertyId) {
-        return predictionRepository.findByPropertyId(propertyId);
-    }
-
-    public PredictionHistory getLatestPrediction(Long propertyId) {
-        return predictionRepository.findFirstByPropertyIdOrderByCreatedAtDesc(propertyId);
+    private double value(Number value, double fallback) {
+        return value == null ? fallback : value.doubleValue();
     }
 }

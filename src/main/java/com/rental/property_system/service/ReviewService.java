@@ -7,6 +7,8 @@ import com.rental.property_system.entity.User;
 import com.rental.property_system.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
@@ -14,53 +16,47 @@ import java.util.List;
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final BookingService bookingService;
     private final PropertyService propertyService;
     private final UserService userService;
+    private final BookingService bookingService;
 
-    public Review addReview(Long propertyId, Long tenantId, Long bookingId,
-                            int rating, String comment) {
+    @Transactional
+    public Review addReview(Long propertyId, Long tenantId, Long bookingId, int rating, String comment) {
+        if (rating < 1 || rating > 5) {
+            throw new RuntimeException("Rating must be between 1 and 5");
+        }
+        Booking booking = bookingService.getBookingById(bookingId);
+        if (!booking.getTenant().getId().equals(tenantId) || !booking.getProperty().getId().equals(propertyId)) {
+            throw new RuntimeException("Review does not match this booking");
+        }
+        if (!"COMPLETED".equals(booking.getBookingStatus())) {
+            throw new RuntimeException("Reviews are allowed only after booking completion");
+        }
+        reviewRepository.findByBooking(booking).ifPresent(existing -> {
+            throw new RuntimeException("You have already reviewed this booking");
+        });
+
         Property property = propertyService.getPropertyById(propertyId);
         User tenant = userService.getUserById(tenantId);
-        Booking booking = bookingService.getBookingById(bookingId);
-
-        if (!booking.getBookingStatus().equals("COMPLETED")) {
-            throw new RuntimeException("Only completed bookings can be reviewed!");
-        }
-        if (!booking.getTenant().getId().equals(tenantId)) {
-            throw new RuntimeException("You can only review your own bookings!");
-        }
-        if (rating < 1 || rating > 5) {
-            throw new RuntimeException("Rating must be between 1 and 5!");
-        }
-
         Review review = new Review();
         review.setProperty(property);
         review.setTenant(tenant);
         review.setBooking(booking);
         review.setRating(rating);
         review.setComment(comment);
-
         return reviewRepository.save(review);
     }
 
     public List<Review> getReviewsByProperty(Long propertyId) {
-        Property property = propertyService.getPropertyById(propertyId);
-        return reviewRepository.findByProperty(property);
+        return reviewRepository.findByPropertyOrderByIdDesc(propertyService.getPropertyById(propertyId));
     }
 
     public List<Review> getReviewsByTenant(Long tenantId) {
-        User tenant = userService.getUserById(tenantId);
-        return reviewRepository.findByTenant(tenant);
+        return reviewRepository.findByTenantOrderByIdDesc(userService.getUserById(tenantId));
     }
 
-    public Double getAverageRating(Long propertyId) {
+    public double getAverageRating(Long propertyId) {
         List<Review> reviews = getReviewsByProperty(propertyId);
-        if (reviews.isEmpty()) return 0.0;
         return reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
-    }
-
-    public void deleteReview(Long reviewId) {
-        reviewRepository.deleteById(reviewId);
     }
 }
