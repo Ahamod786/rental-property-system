@@ -42,6 +42,7 @@ public class BookingService {
         booking.setStartDate(startDate);
         booking.setEndDate(endDate);
         booking.setBookingStatus("PENDING");
+        booking.setPaymentStatus("UNPAID");
         booking.setTotalPrice(calculateTotalPrice(property.getRentPrice(), startDate, endDate));
         return bookingRepository.save(booking);
     }
@@ -75,6 +76,9 @@ public class BookingService {
         if (!List.of("PENDING", "APPROVED").contains(booking.getBookingStatus())) {
             throw new RuntimeException("Only pending or approved bookings can be cancelled");
         }
+        if ("SUCCESS".equals(booking.getPaymentStatus())) {
+            throw new RuntimeException("Paid bookings cannot be cancelled");
+        }
         booking.setBookingStatus("CANCELLED");
         return bookingRepository.save(booking);
     }
@@ -82,7 +86,9 @@ public class BookingService {
     @Transactional
     public Booking completeBooking(Long bookingId) {
         Booking booking = getBookingById(bookingId);
-        requireStatus(booking, "APPROVED");
+        if (!List.of("APPROVED", "PAID").contains(booking.getBookingStatus())) {
+            throw new RuntimeException("Booking must be approved or paid for this action");
+        }
         booking.setBookingStatus("COMPLETED");
         return bookingRepository.save(booking);
     }

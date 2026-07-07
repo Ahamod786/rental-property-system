@@ -31,7 +31,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/property/*", "/api/properties/**").permitAll()
                         .requestMatchers("/property/new", "/property/*/edit", "/property/*/delete",
                                 "/property/*/upload-image", "/property/image/*/delete", "/dashboard/**").hasRole("OWNER")
-                        .requestMatchers("/my-bookings/**", "/checkout/**", "/booking/**").hasRole("TENANT")
+                        .requestMatchers("/my-bookings/**", "/checkout/**", "/payment/**", "/booking/**").hasRole("TENANT")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/bookings/*/approve", "/api/bookings/*/reject", "/api/bookings/*/complete").hasRole("OWNER")
                         .requestMatchers("/api/payments/**", "/api/reviews/**", "/api/bookings/**").authenticated()

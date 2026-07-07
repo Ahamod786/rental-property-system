@@ -17,6 +17,7 @@ import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "bookings")
@@ -50,6 +51,12 @@ public class Booking {
 
     @Column(name = "booking_status", nullable = false, length = 20)
     private String bookingStatus = "PENDING";
+
+    @Column(name = "payment_status", nullable = false, length = 20)
+    private String paymentStatus = "UNPAID";
+
+    @Column(name = "payment_date")
+    private LocalDateTime paymentDate;
 
     @Column(name = "total_price", precision = 12, scale = 2)
     private BigDecimal totalPrice;

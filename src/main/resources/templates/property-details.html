@@ -51,7 +51,9 @@
             <div class="detail-panel">
                 <div class="d-flex justify-content-between">
                     <h1 class="h3" th:text="${property.title}">Property</h1>
-                    <span class="badge text-bg-success align-self-start" th:text="${property.status}">AVAILABLE</span>
+                    <span class="badge align-self-start"
+                          th:classappend="${property.status == 'AVAILABLE'} ? ' text-bg-success' : ' text-bg-secondary'"
+                          th:text="${property.status}">AVAILABLE</span>
                 </div>
                 <p class="text-muted" th:text="${property.location}">Location</p>
                 <p th:text="${property.description}">Description</p>
@@ -63,7 +65,7 @@
                     <dt class="col-6">Bathrooms</dt><dd class="col-6" th:text="${property.bathrooms != null ? property.bathrooms : '-'}">-</dd>
                     <dt class="col-6">Average Rating</dt><dd class="col-6" th:text="${#numbers.formatDecimal(averageRating, 1, 1)} + ' / 5'">0 / 5</dd>
                 </dl>
-                <form sec:authorize="hasRole('TENANT')" th:action="@{/property/{id}/book(id=${property.id})}" method="post" class="row g-3">
+                <form sec:authorize="hasRole('TENANT')" th:if="${property.status == 'AVAILABLE'}" th:action="@{/property/{id}/book(id=${property.id})}" method="post" class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label" for="startDate">Start Date</label>
                         <input class="form-control" id="startDate" name="startDate" type="date" required>
@@ -73,9 +75,13 @@
                         <input class="form-control" id="endDate" name="endDate" type="date" required>
                     </div>
                     <div class="col-12">
-                        <button class="btn btn-primary w-100" type="submit">Request Booking</button>
+                        <button class="btn btn-primary w-100" type="submit">Book Now</button>
                     </div>
                 </form>
+                <div sec:authorize="hasRole('TENANT')" th:if="${property.status != 'AVAILABLE'}" class="alert alert-secondary mb-0">
+                    <strong>Not Available</strong>
+                    <div>This property is currently unavailable for new bookings.</div>
+                </div>
                 <div sec:authorize="hasRole('OWNER')" class="d-flex gap-2 mt-3">
                     <a class="btn btn-outline-primary" th:href="@{/property/{id}/edit(id=${property.id})}">Edit</a>
                     <form th:action="@{/property/{id}/delete(id=${property.id})}" method="post">
@@ -90,7 +96,11 @@
         <h2 class="h4">Reviews</h2>
         <div class="list-group" th:if="${!#lists.isEmpty(reviews)}">
             <div class="list-group-item" th:each="review : ${reviews}">
-                <strong th:text="${review.rating} + '/5'">5/5</strong>
+                <div class="d-flex justify-content-between gap-3">
+                    <strong th:text="${review.rating} + '/5 stars'">5/5 stars</strong>
+                    <small class="text-muted" th:text="${#temporals.format(review.reviewDate, 'dd MMM yyyy')}">Date</small>
+                </div>
+                <small class="text-muted" th:text="|By ${review.tenant.name}|">By tenant</small>
                 <p class="mb-0" th:text="${review.comment}">Comment</p>
             </div>
         </div>

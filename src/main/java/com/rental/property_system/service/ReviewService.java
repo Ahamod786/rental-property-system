@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,8 +30,11 @@ public class ReviewService {
         if (!booking.getTenant().getId().equals(tenantId) || !booking.getProperty().getId().equals(propertyId)) {
             throw new RuntimeException("Review does not match this booking");
         }
-        if (!"COMPLETED".equals(booking.getBookingStatus())) {
-            throw new RuntimeException("Reviews are allowed only after booking completion");
+        if (!"PAID".equals(booking.getBookingStatus()) && !"COMPLETED".equals(booking.getBookingStatus())) {
+            throw new RuntimeException("Reviews are allowed only after payment is completed");
+        }
+        if (!"SUCCESS".equals(booking.getPaymentStatus())) {
+            throw new RuntimeException("You must complete payment before writing a review");
         }
         reviewRepository.findByBooking(booking).ifPresent(existing -> {
             throw new RuntimeException("You have already reviewed this booking");
@@ -44,6 +48,7 @@ public class ReviewService {
         review.setBooking(booking);
         review.setRating(rating);
         review.setComment(comment);
+        review.setReviewDate(LocalDateTime.now());
         return reviewRepository.save(review);
     }
 

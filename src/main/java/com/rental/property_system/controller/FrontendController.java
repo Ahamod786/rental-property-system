@@ -1,6 +1,7 @@
 package com.rental.property_system.controller;
 
 import com.rental.property_system.entity.Booking;
+import com.rental.property_system.entity.PaymentTransaction;
 import com.rental.property_system.entity.Property;
 import com.rental.property_system.entity.PropertyImage;
 import com.rental.property_system.entity.Review;
@@ -256,12 +257,35 @@ public class FrontendController {
         try {
             User tenant = currentUser(principal);
             paymentService.processPayment(bookingId, tenant.getId(), paymentMethod);
-            redirectAttributes.addFlashAttribute("successMessage", "Mock payment completed successfully.");
-            return "redirect:/my-bookings";
+            return "redirect:/payment/success/" + bookingId;
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             return "redirect:/checkout/" + bookingId;
         }
+    }
+
+    @GetMapping("/payment/success/{bookingId}")
+    public String showPaymentSuccess(@PathVariable Long bookingId, Model model, Principal principal) {
+        Booking booking = bookingService.getBookingById(bookingId);
+        User tenant = currentUser(principal);
+        assertTenant(booking, tenant);
+        PaymentTransaction transaction = paymentService.getSuccessfulPaymentForBooking(bookingId, tenant.getId());
+        model.addAttribute("booking", booking);
+        model.addAttribute("transaction", transaction);
+        model.addAttribute("isReceipt", false);
+        return "payment-success";
+    }
+
+    @GetMapping("/payment/receipt/{bookingId}")
+    public String showPaymentReceipt(@PathVariable Long bookingId, Model model, Principal principal) {
+        Booking booking = bookingService.getBookingById(bookingId);
+        User tenant = currentUser(principal);
+        assertTenant(booking, tenant);
+        PaymentTransaction transaction = paymentService.getLatestPaymentForBooking(bookingId, tenant.getId());
+        model.addAttribute("booking", booking);
+        model.addAttribute("transaction", transaction);
+        model.addAttribute("isReceipt", true);
+        return "payment-success";
     }
 
     @GetMapping("/booking/{bookingId}/review")

@@ -27,13 +27,17 @@
                 </td>
                 <td th:text="|${booking.startDate} to ${booking.endDate}|">Dates</td>
                 <td th:text="${#numbers.formatCurrency(booking.totalPrice)}">$0</td>
-                <td><span class="badge text-bg-info" th:text="${booking.bookingStatus}">PENDING</span></td>
+                <td>
+                    <span class="badge text-bg-info" th:text="${booking.bookingStatus}">PENDING</span>
+                    <small class="d-block text-muted" th:if="${booking.paymentStatus == 'SUCCESS'}" th:text="${#temporals.format(booking.paymentDate, 'dd MMM yyyy, HH:mm')}">Paid date</small>
+                </td>
                 <td class="text-end">
                     <a th:if="${booking.bookingStatus == 'APPROVED'}" class="btn btn-sm btn-success" th:href="@{/checkout/{id}(id=${booking.id})}">Pay</a>
                     <form th:if="${booking.bookingStatus == 'PENDING' || booking.bookingStatus == 'APPROVED'}" th:action="@{/booking/{id}/cancel(id=${booking.id})}" method="post" class="d-inline">
                         <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>
                     </form>
-                    <a th:if="${booking.bookingStatus == 'COMPLETED'}" class="btn btn-sm btn-primary" th:href="@{/booking/{id}/review(id=${booking.id})}">Review</a>
+                    <a th:if="${booking.bookingStatus == 'PAID' || booking.bookingStatus == 'COMPLETED'}" class="btn btn-sm btn-outline-primary" th:href="@{/payment/receipt/{id}(id=${booking.id})}">View Receipt</a>
+                    <a th:if="${booking.bookingStatus == 'PAID' || booking.bookingStatus == 'COMPLETED'}" class="btn btn-sm btn-primary" th:href="@{/booking/{id}/review(id=${booking.id})}">Write Review</a>
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(bookings)}">

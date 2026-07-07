@@ -30,4 +30,10 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(paymentService.processPayment(bookingId, tenant.getId(), paymentMethod));
     }
+
+    @PostMapping("/receipt")
+    public PaymentTransaction receipt(@RequestParam Long bookingId, Principal principal) {
+        User tenant = userService.getUserByEmail(principal.getName());
+        return paymentService.getSuccessfulPaymentForBooking(bookingId, tenant.getId());
+    }
 }

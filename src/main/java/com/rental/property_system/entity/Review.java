@@ -15,6 +15,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "reviews")
 @Data
@@ -50,4 +52,7 @@ public class Review {
 
     @Column(columnDefinition = "TEXT")
     private String comment;
+
+    @Column(name = "review_date", nullable = false)
+    private LocalDateTime reviewDate;
 }
